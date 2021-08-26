@@ -11,39 +11,16 @@
 #define ERR_MEMORY (ERR_BASE + 3)
 #define ERR_INVALID_FILTER_NAME (ERR_BASE + 4)
 
-/** Filters **/
 /* Filter Names */
 char *filter_names[] = {"smooth", "blur", "sharpen", "mean", "emboss"};
 
-/* Smoothing Filter */
-float Smooth[3][3] = {
-	{1.0 / 9, 1.0 / 9, 1.0 / 9},
-	{1.0 / 9, 1.0 / 9, 1.0 / 9},
-	{1.0 / 9, 1.0 / 9, 1.0 / 9}};
-
-/* Gaussian Blur Filter */
-float GaussianBlur[3][3] = {
-	{1.0 / 16, 2.0 / 16, 1.0 / 16},
-	{2.0 / 16, 4.0 / 16, 2.0 / 16},
-	{1.0 / 16, 2.0 / 16, 1.0 / 16}};
-
-/* Sharpen */
-float Sharpen[3][3] = {
-	{0, -2.0 / 3, 0},
-	{-2.0 / 3, 11.0 / 3, -2.0 / 3},
-	{0, -2.0 / 3, 0}};
-
-/* Mean removal */
-float MeanRemoval[3][3] = {
-	{-1.0, -1.0, -1.0},
-	{-1.0, 9.0, -1.0},
-	{-1.0, -1.0, -1.0}};
-
-/* Emboss */
-float Emboss[3][3] = {
-	{0.0, 1.0, 0.0},
-	{0.0, 0.0, 0.0},
-	{0.0, -1.0, 0.0}};
+/* Filters */
+float filters[5][3][3] = {
+	{{1.0 / 9, 1.0 / 9, 1.0 / 9}, {1.0 / 9, 1.0 / 9, 1.0 / 9}, {1.0 / 9, 1.0 / 9, 1.0 / 9}},
+	{{1.0 / 16, 2.0 / 16, 1.0 / 16}, {2.0 / 16, 4.0 / 16, 2.0 / 16}, {1.0 / 16, 2.0 / 16, 1.0 / 16}},
+	{{0, -2.0 / 3, 0}, {-2.0 / 3, 11.0 / 3, -2.0 / 3}, {0, -2.0 / 3, 0}},
+	{{-1.0, -1.0, -1.0}, {-1.0, 9.0, -1.0}, {-1.0, -1.0, -1.0}},
+	{{0.0, 1.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, -1.0, 0.0}}};
 
 /** Types of pixels **/
 /* RGB */
@@ -195,20 +172,18 @@ int filter_image_color(image *img_in, rgb_pixel **img_block, int rank, int block
 int apply_filter_gray(image *img_in, gray_pixel **img_block, int rank, int block_size, int length, char *filter)
 {
 	int status = STATUS_SUCCES;
-	if (strcmp(filter, filter_names[0]) == 0)
-		status = filter_image_gray(img_in, img_block, rank, block_size, length, Smooth);
-	else if (strcmp(filter, filter_names[1]) == 0)
-		status = filter_image_gray(img_in, img_block, rank, block_size, length, GaussianBlur);
-	else if (strcmp(filter, filter_names[2]) == 0)
-		status = filter_image_gray(img_in, img_block, rank, block_size, length, Sharpen);
-	else if (strcmp(filter, filter_names[3]) == 0)
-		status = filter_image_gray(img_in, img_block, rank, block_size, length, MeanRemoval);
-	else if (strcmp(filter, filter_names[4]) == 0)
-		status = filter_image_gray(img_in, img_block, rank, block_size, length, Emboss);
-	else
+	for (int i = 0; i < 5; i++)
 	{
-		printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
-		status = ERR_INVALID_FILTER_NAME;
+		if (strcmp(filter, filter_names[i]) == 0)
+		{
+			status = filter_image_gray(img_in, img_block, rank, block_size, length, filters[i]);
+			break;
+		}
+		else if (i == 4)
+		{
+			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
+			status = ERR_INVALID_FILTER_NAME;
+		}
 	}
 	return status;
 }
@@ -217,20 +192,18 @@ int apply_filter_gray(image *img_in, gray_pixel **img_block, int rank, int block
 int apply_filter_color(image *img_in, rgb_pixel **img_block, int rank, int block_size, int length, char *filter)
 {
 	int status = STATUS_SUCCES;
-	if (strcmp(filter, filter_names[0]) == 0)
-		status = filter_image_color(img_in, img_block, rank, block_size, length, Smooth);
-	else if (strcmp(filter, filter_names[1]) == 0)
-		status = filter_image_color(img_in, img_block, rank, block_size, length, GaussianBlur);
-	else if (strcmp(filter, filter_names[2]) == 0)
-		status = filter_image_color(img_in, img_block, rank, block_size, length, Sharpen);
-	else if (strcmp(filter, filter_names[3]) == 0)
-		status = filter_image_color(img_in, img_block, rank, block_size, length, MeanRemoval);
-	else if (strcmp(filter, filter_names[4]) == 0)
-		status = filter_image_color(img_in, img_block, rank, block_size, length, Emboss);
-	else
+	for (int i = 0; i < 5; i++)
 	{
-		printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
-		status = ERR_INVALID_FILTER_NAME;
+		if (strcmp(filter, filter_names[i]) == 0)
+		{
+			status = filter_image_color(img_in, img_block, rank, block_size, length, filters[i]);
+			break;
+		}
+		else if (i == 4)
+		{
+			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
+			status = ERR_INVALID_FILTER_NAME;
+		}
 	}
 	return status;
 }
