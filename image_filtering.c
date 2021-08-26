@@ -19,7 +19,7 @@ char *filter_names[] = {"smooth", "blur", "sharpen", "mean", "emboss"};
 float Smooth[3][3] = {
 	{1.0 / 9, 1.0 / 9, 1.0 / 9},
 	{1.0 / 9, 1.0 / 9, 1.0 / 9},
-	{1.0 / 9, 1.0 / 9, 1.0 / 9},
+	{1.0 / 9, 1.0 / 9, 1.0 / 9}
 };
 
 /* Gaussian Blur Filter */
