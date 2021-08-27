@@ -107,9 +107,8 @@ int write_image(char *img_filename, image *img)
 }
 
 // Filter a grayscale image
-int filter_image_gray(image *img_in, gray_pixel **img_block, int rank, int block_size, int length, float filter[3][3])
+void filter_image_gray(image *img_in, gray_pixel **img_block, int rank, int block_size, int length, float filter[3][3])
 {
-	int status = STATUS_SUCCES;
 	float new_gray_pixel;
 	int lin, col;
 	for (int i = 0; i < length; i++)
@@ -127,13 +126,11 @@ int filter_image_gray(image *img_in, gray_pixel **img_block, int rank, int block
 		else
 			(*img_block)[i] = (img_in->gray_image)[lin * (img_in->width) + col];
 	}
-	return status;
 }
 
 // Filter a color image
-int filter_image_color(image *img_in, rgb_pixel **img_block, int rank, int block_size, int length, float filter[3][3])
+void filter_image_color(image *img_in, rgb_pixel **img_block, int rank, int block_size, int length, float filter[3][3])
 {
-	int status = STATUS_SUCCES;
 	float new_pixel_r, new_pixel_g, new_pixel_b;
 	int lin, col;
 	for (int i = 0; i < length; i++)
@@ -165,47 +162,44 @@ int filter_image_color(image *img_in, rgb_pixel **img_block, int rank, int block
 			(*img_block)[i].blue = (img_in->rgb_image)[lin * (img_in->width) + col].blue;
 		}
 	}
-	return status;
 }
 
 // Apply a filter whose name is from the filter_name list on a grayscale image
 int apply_filter_gray(image *img_in, gray_pixel **img_block, int rank, int block_size, int length, char *filter)
 {
-	int status = STATUS_SUCCES;
 	for (int i = 0; i < 5; i++)
 	{
 		if (strcmp(filter, filter_names[i]) == 0)
 		{
-			status = filter_image_gray(img_in, img_block, rank, block_size, length, filters[i]);
-			break;
+			filter_image_gray(img_in, img_block, rank, block_size, length, filters[i]);
+			return STATUS_SUCCES;
 		}
 		else if (i == 4)
 		{
 			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
-			status = ERR_INVALID_FILTER_NAME;
+			return ERR_INVALID_FILTER_NAME;
 		}
 	}
-	return status;
+	return STATUS_SUCCES;
 }
 
 // Apply a filter whose name is from the filter_name list on a color image
 int apply_filter_color(image *img_in, rgb_pixel **img_block, int rank, int block_size, int length, char *filter)
 {
-	int status = STATUS_SUCCES;
 	for (int i = 0; i < 5; i++)
 	{
 		if (strcmp(filter, filter_names[i]) == 0)
 		{
-			status = filter_image_color(img_in, img_block, rank, block_size, length, filters[i]);
-			break;
+			filter_image_color(img_in, img_block, rank, block_size, length, filters[i]);
+			return STATUS_SUCCES;
 		}
 		else if (i == 4)
 		{
 			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
-			status = ERR_INVALID_FILTER_NAME;
+			return ERR_INVALID_FILTER_NAME;
 		}
 	}
-	return status;
+	return STATUS_SUCCES;
 }
 
 int main(int argc, char *argv[])
