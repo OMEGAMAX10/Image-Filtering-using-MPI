@@ -106,77 +106,35 @@ int write_image(char *img_filename, image *img)
 	return STATUS_SUCCES;
 }
 
-// Filter a grayscale image
-void filter_image_gray(image *img_in, gray_pixel **img_block, int rank, int block_size, int length, float filter[3][3])
-{
-	float new_gray_pixel;
-	int lin, col;
-	for (int i = 0; i < length; i++)
-	{
-		lin = (block_size * rank + i) / (img_in->width);
-		col = (block_size * rank + i) % (img_in->width);
-		if ((lin > 0) && (lin < (img_in->height - 1)) && (col > 0) && (col < (img_in->width - 1)))
-		{
-			new_gray_pixel = 0;
-			for (int i_f = -1; i_f < 2; i_f++)
-				for (int j_f = -1; j_f < 2; j_f++)
-					new_gray_pixel += (float)((float)((img_in->gray_image)[(lin + i_f) * (img_in->width) + (col + j_f)])) * (float)(filter[i_f + 1][j_f + 1]);
-			(*img_block)[i] = (gray_pixel)new_gray_pixel;
-		}
-		else
-			(*img_block)[i] = (img_in->gray_image)[lin * (img_in->width) + col];
-	}
-}
-
-// Filter a color image
-void filter_image_color(image *img_in, rgb_pixel **img_block, int rank, int block_size, int length, float filter[3][3])
-{
-	float new_pixel_r, new_pixel_g, new_pixel_b;
-	int lin, col;
-	for (int i = 0; i < length; i++)
-	{
-		lin = (block_size * rank + i) / (img_in->width);
-		col = (block_size * rank + i) % (img_in->width);
-		if ((lin > 0) && (lin < (img_in->height - 1)) && (col > 0) && (col < (img_in->width - 1)))
-		{
-			new_pixel_r = 0;
-			new_pixel_g = 0;
-			new_pixel_b = 0;
-			for (int i_f = -1; i_f < 2; i_f++)
-			{
-				for (int j_f = -1; j_f < 2; j_f++)
-				{
-					new_pixel_r += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).red) * (float)filter[i_f + 1][j_f + 1]);
-					new_pixel_g += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).green) * (float)filter[i_f + 1][j_f + 1]);
-					new_pixel_b += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).blue) * (float)filter[i_f + 1][j_f + 1]);
-				}
-			}
-			(*img_block)[i].red = (unsigned char)new_pixel_r;
-			(*img_block)[i].green = (unsigned char)new_pixel_g;
-			(*img_block)[i].blue = (unsigned char)new_pixel_b;
-		}
-		else
-		{
-			(*img_block)[i].red = (img_in->rgb_image)[lin * (img_in->width) + col].red;
-			(*img_block)[i].green = (img_in->rgb_image)[lin * (img_in->width) + col].green;
-			(*img_block)[i].blue = (img_in->rgb_image)[lin * (img_in->width) + col].blue;
-		}
-	}
-}
-
 // Apply a filter whose name is from the filter_name list on a grayscale image
-int apply_filter_gray(image *img_in, gray_pixel **img_block, int rank, int block_size, int length, char *filter)
+int apply_filter_gray(image *img_in, gray_pixel **img_block, int rank, int block_size, int length, char *filter_name)
 {
-	for (int i = 0; i < 5; i++)
+	for (int filter_idx = 0; filter_idx < 5; filter_idx++)
 	{
-		if (strcmp(filter, filter_names[i]) == 0)
+		if (strcmp(filter_name, filter_names[filter_idx]) == 0)
 		{
-			filter_image_gray(img_in, img_block, rank, block_size, length, filters[i]);
+			float new_gray_pixel;
+			int lin, col;
+			for (int i = 0; i < length; i++)
+			{
+				lin = (block_size * rank + i) / (img_in->width);
+				col = (block_size * rank + i) % (img_in->width);
+				if ((lin > 0) && (lin < (img_in->height - 1)) && (col > 0) && (col < (img_in->width - 1)))
+				{
+					new_gray_pixel = 0;
+					for (int i_f = -1; i_f < 2; i_f++)
+						for (int j_f = -1; j_f < 2; j_f++)
+							new_gray_pixel += (float)((float)((img_in->gray_image)[(lin + i_f) * (img_in->width) + (col + j_f)])) * (float)(filters[filter_idx][i_f + 1][j_f + 1]);
+					(*img_block)[i] = (gray_pixel)new_gray_pixel;
+				}
+				else
+					(*img_block)[i] = (img_in->gray_image)[lin * (img_in->width) + col];
+			}
 			return STATUS_SUCCES;
 		}
-		else if (i == 4)
+		else if (filter_idx == 4)
 		{
-			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
+			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter_name);
 			return ERR_INVALID_FILTER_NAME;
 		}
 	}
@@ -184,18 +142,49 @@ int apply_filter_gray(image *img_in, gray_pixel **img_block, int rank, int block
 }
 
 // Apply a filter whose name is from the filter_name list on a color image
-int apply_filter_color(image *img_in, rgb_pixel **img_block, int rank, int block_size, int length, char *filter)
+int apply_filter_color(image *img_in, rgb_pixel **img_block, int rank, int block_size, int length, char *filter_name)
 {
-	for (int i = 0; i < 5; i++)
+	for (int filter_idx = 0; filter_idx < 5; filter_idx++)
 	{
-		if (strcmp(filter, filter_names[i]) == 0)
+		if (strcmp(filter_name, filter_names[filter_idx]) == 0)
 		{
-			filter_image_color(img_in, img_block, rank, block_size, length, filters[i]);
+			float new_pixel_r, new_pixel_g, new_pixel_b;
+			int lin, col;
+			for (int i = 0; i < length; i++)
+			{
+				lin = (block_size * rank + i) / (img_in->width);
+				col = (block_size * rank + i) % (img_in->width);
+				if ((lin > 0) && (lin < (img_in->height - 1)) && (col > 0) && (col < (img_in->width - 1)))
+				{
+					new_pixel_r = 0;
+					new_pixel_g = 0;
+					new_pixel_b = 0;
+					for (int i_f = -1; i_f < 2; i_f++)
+					{
+						for (int j_f = -1; j_f < 2; j_f++)
+						{
+							new_pixel_r += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).red) * (float)filters[filter_idx][i_f + 1][j_f + 1]);
+							new_pixel_g += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).green) * (float)filters[filter_idx][i_f + 1][j_f + 1]);
+							new_pixel_b += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).blue) * (float)filters[filter_idx][i_f + 1][j_f + 1]);
+						}
+					}
+					(*img_block)[i].red = (unsigned char)new_pixel_r;
+					(*img_block)[i].green = (unsigned char)new_pixel_g;
+					(*img_block)[i].blue = (unsigned char)new_pixel_b;
+				}
+				else
+				{
+					(*img_block)[i].red = (img_in->rgb_image)[lin * (img_in->width) + col].red;
+					(*img_block)[i].green = (img_in->rgb_image)[lin * (img_in->width) + col].green;
+					(*img_block)[i].blue = (img_in->rgb_image)[lin * (img_in->width) + col].blue;
+				}
+			}
+
 			return STATUS_SUCCES;
 		}
-		else if (i == 4)
+		else if (filter_idx == 4)
 		{
-			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter);
+			printf("Filter \"%s\" is an invalid filter name. Available filters: smooth, blur, sharpen, mean, emboss.\n", filter_name);
 			return ERR_INVALID_FILTER_NAME;
 		}
 	}
