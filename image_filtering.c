@@ -24,7 +24,7 @@ float filters[5][3][3] = {
 
 /** Types of pixels **/
 /* RGB */
-typedef struct rgb_pixel
+typedef struct
 {
 	unsigned char red, green, blue;
 } rgb_pixel;
@@ -33,7 +33,7 @@ typedef struct rgb_pixel
 typedef unsigned char gray_pixel;
 
 /** Structure that stores a .pnm image, either a grayscale or a rgb one **/
-typedef struct image
+typedef struct
 {
 	int width, height;
 	int type; // 5 - grayscale, 6 - rgb
@@ -124,7 +124,7 @@ int apply_filter_gray(image *img_in, gray_pixel **img_block, int rank, int block
 					new_gray_pixel = 0;
 					for (int i_f = -1; i_f < 2; i_f++)
 						for (int j_f = -1; j_f < 2; j_f++)
-							new_gray_pixel += (float)((float)((img_in->gray_image)[(lin + i_f) * (img_in->width) + (col + j_f)])) * (float)(filters[filter_idx][i_f + 1][j_f + 1]);
+							new_gray_pixel += filters[filter_idx][i_f + 1][j_f + 1] * (float)(img_in->gray_image)[(lin + i_f) * (img_in->width) + (col + j_f)];
 					(*img_block)[i] = (gray_pixel)new_gray_pixel;
 				}
 				else
@@ -163,9 +163,9 @@ int apply_filter_color(image *img_in, rgb_pixel **img_block, int rank, int block
 					{
 						for (int j_f = -1; j_f < 2; j_f++)
 						{
-							new_pixel_r += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).red) * (float)filters[filter_idx][i_f + 1][j_f + 1]);
-							new_pixel_g += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).green) * (float)filters[filter_idx][i_f + 1][j_f + 1]);
-							new_pixel_b += (float)((float)(((img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)]).blue) * (float)filters[filter_idx][i_f + 1][j_f + 1]);
+							new_pixel_r += filters[filter_idx][i_f + 1][j_f + 1] * (float)(img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)].red;
+							new_pixel_g += filters[filter_idx][i_f + 1][j_f + 1] * (float)(img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)].green;
+							new_pixel_b += filters[filter_idx][i_f + 1][j_f + 1] * (float)(img_in->rgb_image)[(lin + i_f) * (img_in->width) + (col + j_f)].blue;
 						}
 					}
 					(*img_block)[i].red = (unsigned char)new_pixel_r;
